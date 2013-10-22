@@ -6,13 +6,13 @@ from elementtree import ElementTree
 class Node(object):
 
     def __init__(self, node):
-        self.id = node.attributes["id"].value
-        self.lat = node.attributes["lat"].value
-        self.lon = node.attributes["lon"].value
-        self.timestamp = node.attributes["timestamp"].value
-        self.changeset = node.attributes["changeset"].value
-        self.uid = node.attributes["uid"].value
-        self.user = node.attributes["user"].value
+        self.id = node.get("id")
+        self.lat = node.get("lat")
+        self.lon = node.get("lon")
+        self.timestamp = node.get("timestamp")
+        self.changeset = node.get("changeset")
+        self.uid = node.get("uid")
+        self.user = node.get("user")
         pass
 
     def print_node(self):
@@ -24,8 +24,8 @@ class Node(object):
     def write_node(self, outfile="parsed.csv"):
         with open(outfile,"a") as f:
             line = [self.id, self.timestamp, self.lat, self.lon, self.uid, self.user]
-            line = ("\t").join(line)
-            f.write(line)
+            line = ("\t").join(line) + "\n"
+            f.write(line.encode('utf-8'))
 
 class Region(object):
 
@@ -37,7 +37,7 @@ class Region(object):
 
     def add_node(self, node):
         self.nodes.append(node)
-        node.print_node()
+        #node.print_node()
         pass
 
     def read_input(self):
@@ -47,14 +47,9 @@ class Region(object):
             new_node = Node(node)
             self.add_node(new_node)
         pass
-    
-    def read_input2(self):
-        dom = parse(self.inputpath)
-        for node in dom.getElementsByTagName('node'):
-            print node
             
     def write_output(self):
-        print "hello"
+        print "now writing"
         for node in self.nodes:
             node.write_node(self.outputpath)
         pass

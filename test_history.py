@@ -4,7 +4,7 @@ from history import Node, Region
 class SimpleTest(unittest.TestCase):
 
     def setUp(self):
-        self.place = Region(inputfile = "cyprus-latest-small.osm")
+        self.place = Region(inputfile = "cyprus-latest.osm")
         pass
 
     # read input file and parse it
