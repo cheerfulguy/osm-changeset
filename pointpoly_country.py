@@ -37,14 +37,10 @@ def check(lon, lat):
         # roughly subsets features, instead of go over everything
         ply = feat_in.GetGeometryRef()
 
-        # test
         if ply.Contains(pt):
-
-            # TODO do what you need to do here
-            # print lon, lat, feat_in.GetFieldAsString(idx_reg)
             return feat_in.GetFieldAsString(idx_reg)
 
-def writetocsv(self, points, outfile="os-highway-county.csv"):
+def writetocsv(self, points, outfile=""):
     with open(outfile, "w") as f:
         for point in points:
             pass
@@ -57,16 +53,18 @@ def readpoints(pointfile):
             count=count+1
             if count > 1:
                 items = line.split("\t")
-
                 points.append(pnt)
     return points
 
+
 start = timeit.default_timer()
 
-pointfile = "../rawdata/change-head.csv"
+## this is where you set your input and output files. 
+## use the other library in this package to convert changesets to csv
 pointfile = "../rawdata/change.csv"
 outfile = "../filedata/change_plus_cntry.csv"
 
+## insert path for your shapefile here
 filename = '../rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
 
 # load the shape file as a layer
@@ -75,7 +73,7 @@ ds_in = drv.Open(filename)
 lyr_in = ds_in.GetLayer(0)
 
 # field index for which i want the data extracted 
-# ("satreg2" was what i was looking for)
+# ("FIPS_CNTRY" was what i was looking for)
 idx_reg = lyr_in.GetLayerDefn().GetFieldIndex("FIPS_CNTRY")
 
 count = 0
