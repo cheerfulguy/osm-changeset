@@ -1,4 +1,4 @@
-oms-changeset
+oms-changeset : Python tools for OpenStreetMap changeset file
 =============
 
 This project includes some python tools to work with OpenStreetMap changeset files
