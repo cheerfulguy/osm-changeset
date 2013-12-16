@@ -1,8 +1,13 @@
+#!/usr/bin/env python
+
 import os
 import sys
 from lxml import etree
 from datetime import datetime
 from datetime import timedelta
+
+''' This Program takes in a OSM changeset file in .osm format and spits out a csv'''
+''' **** **** **** **** **** **** **** **** **** **** **** **** **** **** **** **'''
 
 def writefile(outfile, line):
     line = [x.replace('"','').strip() for x in line]
@@ -49,11 +54,10 @@ def parseFile(changesetFile):
     print "parsing complete"
     print "parsed {0}".format(parsedCount)
 
-
 def main():
+    ## this is where you put the path to the changesets file
     with open("../rawdata/changesets-latest.osm") as f:
         parseFile(f)
-
 
 if __name__ == '__main__':
     main()
