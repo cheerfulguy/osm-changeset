@@ -4,6 +4,7 @@
 #$ -j y
 #$ -q all.q
 
+#$ -l rh6=TRUE
 #$ -t 1-183
 
 source /mnt/nfs6/wikipedia.proj/gdalvenv/bin/activate
