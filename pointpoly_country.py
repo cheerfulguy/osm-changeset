@@ -36,36 +36,47 @@ def check(lon, lat):
         if ply.Contains(pt):
             return feat_in.GetFieldAsString(idx_reg)
 
-def main(pointfile, outfile):
+def main(pointfile, outfilestub, startflag=0, step=10):
 
-    count = 0
+    startflag = startflag * 100000
+    outfile = outfilestub + "_" + str(startflag) + "-" + str(startflag+step) + ".csv"
+    count = startflag 
+    logfile = 
+
     with open(pointfile) as infileh:
+
+        infileh.seek(startflag)
         csvreader = csv.DictReader(infileh, delimiter = "\t")
         fields = csvreader.fieldnames
         fields.extend(['fipscode'])
 
-        with open(outfile, "a") as fileh:
+        with open(outfile, "w") as fileh:
             csvwriter = csv.DictWriter(fileh, fields, delimiter="\t")
+
             for line in csvreader:
                 count += 1
-                try:
-                    pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
-                    pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
-                    line['fipscode'] = check(pt_lon, pt_lat)
-                except:
-                    line['fipscode'] = "--"
+                if count < startflag + step:
+                    try:
+                        pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
+                        pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
+                        line['fipscode'] = check(pt_lon, pt_lat)
+                    except:
+                        line['fipscode'] = "--"
 
-                if (count % 10) == 0:
-                    stop = timeit.default_timer()
-                    sys.stdout.write('\r')
-                    sys.stdout.write(str(round(stop-start,2)) + "(s) -- Finished " + str(count))
-                    sys.stdout.flush()
+                    if (count % 10) == 0:
+                        stop = timeit.default_timer()
+                        sys.stdout.write('\r')
+                        sys.stdout.write(str(round(stop-start,2)) + "(s) -- Finished " + str(count))
+                        sys.stdout.flush()
                     
-                # print line['fipscode']
-                csvwriter.writerow(line)
+                    # print count, line
+                    csvwriter.writerow(line)
+
+                elif count > startflag + step:
+                    break
 
     stop = timeit.default_timer()
-    print "wrote " + str(count) + " items in " +  str(stop-start), "(s)"
+    print "\n\nwrote " + str(count) + " items in " +  str(stop-start), "(s)"
 
 if __name__ == "__main__":
 
@@ -73,10 +84,10 @@ if __name__ == "__main__":
     ## use the other script in this package to convert changesets to csv
     pointfile = "../rawdata/change.csv"
 
-    # this is the testing file
-    # pointfile = "../rawdata/change-head.csv"
+    # specify start and end points here.
+    startflag = int(sys.argv[1].strip())
+    step = int(sys.argv[2].strip())
 
     # testing output file
-    outfile = "../filedata/change-head_plus_cntry.csv"
-
-    main(pointfile, outfile)
+    outfilestub = "../filedata/change/country"
+    main(pointfile, outfilestub, startflag, step)
