@@ -1,5 +1,5 @@
 import sys
-from shapely.geometry import Polygon, Point, MultiPoint
+# from shapely.geometry import Polygon, Point, MultiPoint
 import timeit
 import ogr
 import csv
@@ -10,7 +10,7 @@ import csv
 start = timeit.default_timer()
 
 # insert path for your shapefile here
-filename = '../rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
+filename = '/mnt/nfs6/wikipedia.proj/osm/rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
 
 # load the shape file as a layer
 drv = ogr.GetDriverByName('ESRI Shapefile')
@@ -36,19 +36,25 @@ def check(lon, lat):
         if ply.Contains(pt):
             return feat_in.GetFieldAsString(idx_reg)
 
+def writelog(logfileh, data):
+    logfileh.write(data + "\n")
+
 def main(pointfile, outfilestub, startflag=0, step=10):
 
-    startflag = startflag * 100000
+    # startflag = startflag * 100000
     outfile = outfilestub + "_" + str(startflag) + "-" + str(startflag+step) + ".csv"
     count = startflag 
-    logfile = 
+    logfile = outfilestub + "_" + str(startflag) + "-" + str(startflag+step) + ".log"
+    logfileh = open(logfile, "w")
 
     with open(pointfile) as infileh:
 
-        infileh.seek(startflag)
         csvreader = csv.DictReader(infileh, delimiter = "\t")
         fields = csvreader.fieldnames
         fields.extend(['fipscode'])
+        
+        for _ in xrange(startflag):
+            next(csvreader)
 
         with open(outfile, "w") as fileh:
             csvwriter = csv.DictWriter(fileh, fields, delimiter="\t")
@@ -56,27 +62,32 @@ def main(pointfile, outfilestub, startflag=0, step=10):
             for line in csvreader:
                 count += 1
                 if count < startflag + step:
+          
                     try:
                         pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
                         pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
+                    except ValueError:
+                        pass
+
+                    try:
                         line['fipscode'] = check(pt_lon, pt_lat)
                     except:
                         line['fipscode'] = "--"
 
-                    if (count % 10) == 0:
+                    if (count % 1000) == 0:
                         stop = timeit.default_timer()
-                        sys.stdout.write('\r')
-                        sys.stdout.write(str(round(stop-start,2)) + "(s) -- Finished " + str(count))
-                        sys.stdout.flush()
+                        writelog(logfileh, str(round(stop-start,2)) + "(s) -- Finished " + str(count)) 
                     
-                    # print count, line
                     csvwriter.writerow(line)
 
                 elif count > startflag + step:
                     break
 
     stop = timeit.default_timer()
+    writelog(logfileh, "\n\nwrote " + str(count) + " items in " +  str(stop-start) + "(s)")
     print "\n\nwrote " + str(count) + " items in " +  str(stop-start), "(s)"
+    logfileh.close()
+
 
 if __name__ == "__main__":
 
