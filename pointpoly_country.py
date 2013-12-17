@@ -88,7 +88,6 @@ def main(pointfile, outfilestub, startflag=0, step=10):
     print "\n\nwrote " + str(count) + " items in " +  str(stop-start), "(s)"
     logfileh.close()
 
-
 if __name__ == "__main__":
 
     ## this is where you set your input and output files. 
