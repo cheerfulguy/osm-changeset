@@ -41,7 +41,7 @@ def writelog(logfileh, data):
 
 def main(pointfile, outfilestub, startflag=0, step=10):
 
-    # startflag = startflag * 100000
+    startflag = (startflag-1) * 100000
     outfile = outfilestub + "_" + str(startflag) + "-" + str(startflag+step) + ".csv"
     count = startflag 
     logfile = outfilestub + "_" + str(startflag) + "-" + str(startflag+step) + ".log"
