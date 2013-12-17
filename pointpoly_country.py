@@ -55,11 +55,13 @@ def main(pointfile, outfile):
                 except:
                     line['fipscode'] = "--"
 
-                if (count % 1000) == 0:
+                if (count % 10) == 0:
                     stop = timeit.default_timer()
-                    print str(stop-start), "(s)", " -- Finished ", str(count)
-                
-                print line['fipscode']
+                    sys.stdout.write('\r')
+                    sys.stdout.write(str(round(stop-start,2)) + "(s) -- Finished " + str(count))
+                    sys.stdout.flush()
+                    
+                # print line['fipscode']
                 csvwriter.writerow(line)
 
     stop = timeit.default_timer()
@@ -72,7 +74,7 @@ if __name__ == "__main__":
     pointfile = "../rawdata/change.csv"
 
     # this is the testing file
-    pointfile = "../rawdata/change-head.csv"
+    # pointfile = "../rawdata/change-head.csv"
 
     # testing output file
     outfile = "../filedata/change-head_plus_cntry.csv"
