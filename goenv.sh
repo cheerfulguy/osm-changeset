@@ -4,7 +4,7 @@
 #$ -j y
 #$ -q all.q
 
-#$ -t 1-2
+#$ -t 1-183
 
 source /mnt/nfs6/wikipedia.proj/gdalvenv/bin/activate
 export LD_LIBRARY_PATH=/mnt/nfs6/wikipedia.proj/gdalvenv/lib:$LD_LIBRARY_PATH
