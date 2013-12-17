@@ -4,26 +4,22 @@ import timeit
 import ogr
 import csv
 
-class MyPoint(Point):
-    def __init__(self,lon=-1,lat=-1, pntid=-1, name=""):
+''' This script takes a shape file intersects it with an OSM changeset file '''
 
-        self.pnt = Point(float(lon),float(lat))
-        self.name = name.replace('"','').strip()
-        self.id = pntid
-        self.countyname = ""
-        self.countycode = ""
+# some global variables are set here
+start = timeit.default_timer()
 
-    def setpoly(self, countycode = ""):
-        if countycode is not None:
-            self.countycode = countycode
-        else:
-            self.countycode = "nomatch"
+# insert path for your shapefile here
+filename = '../rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
 
-    def writepoint(self, fileh):
-        line = [str(point.id), str(point.pnt.x), str(point.pnt.y), point.name, point.countycode]
-        linestring = (", ").join(line) + "\n"
-        if point.countycode != "":
-                fileh.write(linestring)
+# load the shape file as a layer
+drv = ogr.GetDriverByName('ESRI Shapefile')
+ds_in = drv.Open(filename)
+lyr_in = ds_in.GetLayer(0)
+
+# field index for which i want the data extracted 
+# ("FIPS_CNTRY" was what i was looking for)
+idx_reg = lyr_in.GetLayerDefn().GetFieldIndex("FIPS_CNTRY")
 
 def check(lon, lat):
     # create point geometry
@@ -40,74 +36,45 @@ def check(lon, lat):
         if ply.Contains(pt):
             return feat_in.GetFieldAsString(idx_reg)
 
-def writetocsv(self, points, outfile=""):
-    with open(outfile, "w") as f:
-        for point in points:
-            pass
+def main(pointfile, outfile):
 
-def readpoints(pointfile):
     count = 0
-    points = []
-    with open(pointfile) as f:
-        for line in f:
-            count=count+1
-            if count > 1:
-                items = line.split("\t")
-                points.append(pnt)
-    return points
+    with open(pointfile) as infileh:
+        csvreader = csv.DictReader(infileh, delimiter = "\t")
+        fields = csvreader.fieldnames
+        fields.extend(['fipscode'])
 
+        with open(outfile, "a") as fileh:
+            csvwriter = csv.DictWriter(fileh, fields, delimiter="\t")
+            for line in csvreader:
+                count += 1
+                try:
+                    pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
+                    pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
+                    line['fipscode'] = check(pt_lon, pt_lat)
+                except:
+                    line['fipscode'] = "--"
 
-start = timeit.default_timer()
-
-## this is where you set your input and output files. 
-## use the other library in this package to convert changesets to csv
-pointfile = "../rawdata/change.csv"
-outfile = "../filedata/change_plus_cntry.csv"
-
-## insert path for your shapefile here
-filename = '../rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
-
-# load the shape file as a layer
-drv = ogr.GetDriverByName('ESRI Shapefile')
-ds_in = drv.Open(filename)
-lyr_in = ds_in.GetLayer(0)
-
-# field index for which i want the data extracted 
-# ("FIPS_CNTRY" was what i was looking for)
-idx_reg = lyr_in.GetLayerDefn().GetFieldIndex("FIPS_CNTRY")
-
-count = 0
-
-with open(pointfile) as infileh:
-    csvreader = csv.DictReader(infileh, delimiter = "\t")
-    fields = csvreader.fieldnames
-    fields.extend(['fipscode'])
-
-    with open(outfile, "a") as fileh:
-        csvwriter = csv.DictWriter(fileh, fields, delimiter="\t")
-        for line in csvreader:
-            count += 1
-            try:
-                pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
-                pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
-
-                line['fipscode'] = check(pt_lon, pt_lat)
-            except:
-                line['fipscode'] = "NF"
-
-            if (count % 1000) == 0:
-
-                stop = timeit.default_timer()
-                print str(stop-start), "(s)", " -- Finished ", str(count)
+                if (count % 1000) == 0:
+                    stop = timeit.default_timer()
+                    print str(stop-start), "(s)", " -- Finished ", str(count)
                 
-            csvwriter.writerow(line)
+                print line['fipscode']
+                csvwriter.writerow(line)
 
-stop = timeit.default_timer()
-print "wrote " + str(count) + " items in " +  str(stop-start), "(s)"
+    stop = timeit.default_timer()
+    print "wrote " + str(count) + " items in " +  str(stop-start), "(s)"
 
+if __name__ == "__main__":
 
+    ## this is where you set your input and output files. 
+    ## use the other script in this package to convert changesets to csv
+    pointfile = "../rawdata/change.csv"
 
+    # this is the testing file
+    pointfile = "../rawdata/change-head.csv"
 
+    # testing output file
+    outfile = "../filedata/change-head_plus_cntry.csv"
 
-
-
+    main(pointfile, outfile)
