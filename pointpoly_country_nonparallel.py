@@ -1,5 +1,5 @@
 import sys
-from shapely.geometry import Polygon, Point, MultiPoint
+# from shapely.geometry import Polygon, Point, MultiPoint
 import timeit
 import ogr
 import csv
@@ -10,7 +10,7 @@ import csv
 start = timeit.default_timer()
 
 # insert path for your shapefile here
-filename = '../rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
+filename = '/mnt/nfs6/wikipedia.proj/osm/rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
 
 # load the shape file as a layer
 drv = ogr.GetDriverByName('ESRI Shapefile')
@@ -36,34 +36,57 @@ def check(lon, lat):
         if ply.Contains(pt):
             return feat_in.GetFieldAsString(idx_reg)
 
-def main(pointfile, outfile):
+def writelog(logfileh, data):
+    logfileh.write(data + "\n")
 
-    count = 0
+def main(pointfile, outfilestub, startflag=0, step=10):
+
+    startflag = (startflag-1) * 100000
+    outfile = outfilestub + "_" + str(startflag) + "-" + str(startflag+step) + ".csv"
+    count = startflag 
+    logfile = outfilestub + "_" + str(startflag) + "-" + str(startflag+step) + ".log"
+    logfileh = open(logfile, "w")
+
     with open(pointfile) as infileh:
+
         csvreader = csv.DictReader(infileh, delimiter = "\t")
         fields = csvreader.fieldnames
         fields.extend(['fipscode'])
+        
+        for _ in xrange(startflag):
+            next(csvreader)
 
-        with open(outfile, "a") as fileh:
+        with open(outfile, "w") as fileh:
             csvwriter = csv.DictWriter(fileh, fields, delimiter="\t")
+
             for line in csvreader:
                 count += 1
-                try:
-                    pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
-                    pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
-                    line['fipscode'] = check(pt_lon, pt_lat)
-                except:
-                    line['fipscode'] = "--"
+                if count < startflag + step:
+          
+                    try:
+                        pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
+                        pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
+                    except ValueError:
+                        pass
 
-                if (count % 1000) == 0:
-                    stop = timeit.default_timer()
-                    print str(stop-start), "(s)", " -- Finished ", str(count)
-                
-                print line['fipscode']
-                csvwriter.writerow(line)
+                    try:
+                        line['fipscode'] = check(pt_lon, pt_lat)
+                    except:
+                        line['fipscode'] = "--"
+
+                    if (count % 1000) == 0:
+                        stop = timeit.default_timer()
+                        writelog(logfileh, str(round(stop-start,2)) + "(s) -- Finished " + str(count)) 
+                    
+                    csvwriter.writerow(line)
+
+                elif count > startflag + step:
+                    break
 
     stop = timeit.default_timer()
-    print "wrote " + str(count) + " items in " +  str(stop-start), "(s)"
+    writelog(logfileh, "\n\nwrote " + str(count) + " items in " +  str(stop-start) + "(s)")
+    print "\n\nwrote " + str(count) + " items in " +  str(stop-start), "(s)"
+    logfileh.close()
 
 if __name__ == "__main__":
 
@@ -71,10 +94,10 @@ if __name__ == "__main__":
     ## use the other script in this package to convert changesets to csv
     pointfile = "../rawdata/change.csv"
 
-    # this is the testing file
-    pointfile = "../rawdata/change-head.csv"
+    # specify start and end points here.
+    startflag = int(sys.argv[1].strip())
+    step = int(sys.argv[2].strip())
 
     # testing output file
-    outfile = "../filedata/change-head_plus_cntry.csv"
-
-    main(pointfile, outfile)
+    outfilestub = "../filedata/change/country"
+    main(pointfile, outfilestub, startflag, step)
