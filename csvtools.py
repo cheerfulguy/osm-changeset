@@ -18,11 +18,11 @@ def chooserows(key, val, inputfile, outputfile):
 
 if __name__ == "__main__":
 
-    # inputfile = sys.argv[1].strip()
-    # outputfile = sys.argv[2].strip()
-
-    key = "@id"
-    val = "19"
+    inputfile = sys.argv[1].strip()
+    outputfile = sys.argv[2].strip()
+    key = "@oname"
+    val = "node"
     
     chooserows(key, val, "map.csv", "mapfilter.csv")
+    chooserows(key, val, inputfile, outputfile)
     

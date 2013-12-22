@@ -3,6 +3,7 @@ import sys
 import timeit
 import ogr
 import csv
+import os
 
 ''' This script takes a shape file intersects it with an OSM changeset file '''
 
@@ -10,16 +11,23 @@ import csv
 start = timeit.default_timer()
 
 # insert path for your shapefile here
-filename = '/mnt/nfs6/wikipedia.proj/osm/rawdata/worldmap/world_country_admin_boundary_shapefile_with_fips_codes.shp'
+filename = '/mnt/nfs6/wikipedia.proj/osm/rawdata/gbmap/map.shp'
 
 # load the shape file as a layer
 drv = ogr.GetDriverByName('ESRI Shapefile')
 ds_in = drv.Open(filename)
-lyr_in = ds_in.GetLayer(0)
+
+if ds_in is None:
+    print 'Could not open %s' % (filename)
+else:
+    print 'Opened %s' % (filename)
+    lyr_in = ds_in.GetLayer(0)
+    featureCount = lyr_in.GetFeatureCount()
+    print "Number of features in %s: %d" % (os.path.basename(filename),featureCount)
 
 # field index for which i want the data extracted 
 # ("FIPS_CNTRY" was what i was looking for)
-idx_reg = lyr_in.GetLayerDefn().GetFieldIndex("FIPS_CNTRY")
+idx_reg = lyr_in.GetLayerDefn().GetFieldIndex("CODE")
 
 def check(lon, lat):
     # create point geometry
@@ -29,10 +37,8 @@ def check(lon, lat):
 
     # go over all the polygons in the layer see if one include the point
     for feat_in in lyr_in:
-
         # roughly subsets features, instead of go over everything
         ply = feat_in.GetGeometryRef()
-
         if ply.Contains(pt):
             return feat_in.GetFieldAsString(idx_reg)
 
@@ -63,16 +69,10 @@ def main(pointfile, outfilestub, startflag=0, step=10):
                 count += 1
                 if count < startflag + step:
           
-                    try:
-                        pt_lon = (float(line['min_lon']) + float(line['max_lon']))/2
-                        pt_lat = (float(line['min_lat']) + float(line['max_lat']))/2
-                    except ValueError:
-                        pass
+                    pt_lon = float(line['@lon'])
+                    pt_lat = float(line['@lat'])
 
-                    try:
-                        line['fipscode'] = check(pt_lon, pt_lat)
-                    except:
-                        line['fipscode'] = "--"
+                    line['fipscode'] = check(pt_lon, pt_lat)
 
                     if (count % 1000) == 0:
                         stop = timeit.default_timer()
@@ -92,12 +92,12 @@ if __name__ == "__main__":
 
     ## this is where you set your input and output files. 
     ## use the other script in this package to convert changesets to csv
-    pointfile = "../rawdata/change.csv"
+    pointfile = "../rawdata/gb-current-map.csv"
 
     # specify start and end points here.
     startflag = int(sys.argv[1].strip())
     step = int(sys.argv[2].strip())
 
     # testing output file
-    outfilestub = "../filedata/change/country"
+    outfilestub = "../filedata/change/gb"
     main(pointfile, outfilestub, startflag, step)
